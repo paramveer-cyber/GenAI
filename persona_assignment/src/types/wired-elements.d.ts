@@ -9,7 +9,7 @@ type WiredBase = React.DetailedHTMLProps<
   fill?: string;
 };
 
-declare global {
+declare module "react" {
   namespace JSX {
     interface IntrinsicElements {
       "wired-card": WiredBase;
