@@ -9,6 +9,8 @@ import {
   piyushGargPersona,
 } from "@/lib/personas";
 
+export const runtime = "edge";
+
 let client: OpenAI | null = null;
 
 const system_prompt = (persona: personaType) => {
