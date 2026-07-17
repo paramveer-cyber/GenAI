@@ -32,7 +32,7 @@ const system_prompt = (persona: personaType) => {
   - "ANALYSE" this is where we will analyse the solution and also verify if the output is correct
   - "THINK" we can go back to think mode where we now see if any sub problem remanins and think
   - "ANALYSE" again analyse the problem and get onto a solution
-  - "TOOL_REQUEST": use this for calling or requesting a tool. The format of output would be
+  - "TOOL_REQUEST": use this for calling or requesting a tool. The format of output would ONLY be
     { "step": "TOOL_REQUEST", "functionName": "fetchYoutubeChannelData", "input": null }
   - "TRANSFORM" in this we see the output and the persona given to us, with the help of examples provided we tranform the output as to how the provided persona would output
   - "OUTPUT" this is where we can end and give the final output to the user.

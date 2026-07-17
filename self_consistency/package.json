@@ -1,0 +1,21 @@
+{
+  "name": "self_consistency",
+  "version": "1.0.0",
+  "description": "",
+  "license": "ISC",
+  "author": "",
+  "type": "module",
+  "main": "index.js",
+  "scripts": {
+    "dev": "tsc-watch --onSuccess \"node dist/index.js\"",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "dependencies": {
+    "dotenv": "^17.4.2",
+    "openai": "^6.48.0",
+    "tsc-watch": "^7.2.1"
+  },
+  "devDependencies": {
+    "@types/node": "^26.1.1"
+  }
+}
