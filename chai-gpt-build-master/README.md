@@ -6,6 +6,13 @@ stream assistant replies token by token with optional web search grounding.
 
 ---
 
+## Links
+
+- Deployed link : [ChaiGPT](https://chaigptrefined.vercel.app/)
+- Demo vid : [Link](https://youtu.be/SY_hG8KibE4)
+
+---
+
 ## Tech Stack
 
 ```
