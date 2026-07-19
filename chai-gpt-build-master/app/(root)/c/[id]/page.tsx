@@ -1,6 +1,8 @@
 import { loadChatMessages } from "@/features/ai/actions/chat-store";
+import { getRemainingPrompts } from "@/features/ai/utils/rate-limit";
 import { getConversation } from "@/features/conversation/actions/conversation-actions";
 import { ConversationView } from "@/features/conversation/components/conversation-view";
+import { requireUser } from "@/features/auth/action/require-user";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import React from "react";
@@ -35,12 +37,15 @@ const page = async ({ params }: ConversationPageProps) => {
   }
 
   const initialMessages = await loadChatMessages(id);
+  const user = await requireUser();
+  const remainingPrompts = await getRemainingPrompts(user.id);
 
   return (
     <ConversationView
       key={id}
       conversationId={id}
       initialMessages={initialMessages}
+      remainingPrompts={remainingPrompts}
     />
   );
 };

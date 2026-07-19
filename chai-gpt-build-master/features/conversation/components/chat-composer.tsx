@@ -15,6 +15,7 @@ type ChatComposerProps = {
   onSend: (content: string) => Promise<void> | void;
   onStop?: () => void;
   isSending?: boolean;
+  remainingPrompts?: number;
   placeholder?: string;
   className?: string;
   autoFocus?: boolean;
@@ -27,12 +28,15 @@ export function ChatComposer({
   onSend,
   onStop,
   isSending = false,
+  remainingPrompts,
   placeholder = "Message ChaiGPT…",
   className,
   autoFocus = false,
 }: ChatComposerProps) {
   const [value, setValue] = React.useState("");
   const textareaRef = React.useRef<HTMLTextAreaElement>(null);
+  const limitReached = remainingPrompts === 0;
+  const disabled = isSending || limitReached;
 
   React.useEffect(() => {
     if (autoFocus) {
@@ -44,7 +48,7 @@ export function ChatComposer({
   async function handleSubmit(event?: React.FormEvent) {
     event?.preventDefault();
     const content = value.trim();
-    if (!content || isSending) return;
+    if (!content || disabled) return;
 
     setValue("");
     await onSend(content);
@@ -59,7 +63,7 @@ export function ChatComposer({
     }
   }
 
-  const canSend = value.trim().length > 0 && !isSending;
+  const canSend = value.trim().length > 0 && !disabled;
 
   return (
     <form
@@ -72,8 +76,8 @@ export function ChatComposer({
           value={value}
           onChange={(event) => setValue(event.target.value)}
           onKeyDown={handleKeyDown}
-          placeholder={placeholder}
-          disabled={isSending}
+          placeholder={limitReached ? "Daily limit reached" : placeholder}
+          disabled={disabled}
           rows={1}
           className="max-h-48 min-h-12 py-3.5 pl-4 text-[15px] leading-relaxed"
         />
@@ -92,7 +96,11 @@ export function ChatComposer({
         </InputGroupAddon>
       </InputGroup>
       <p className="mt-2 text-center text-xs text-muted-foreground">
-        ChaiGPT can make mistakes. Check important info.
+        {limitReached
+          ? "Daily limit reached — try again tomorrow."
+          : remainingPrompts !== undefined
+            ? `${remainingPrompts} prompt${remainingPrompts === 1 ? "" : "s"} left today.`
+            : "ChaiGPT can make mistakes. Check important info."}
       </p>
     </form>
   );

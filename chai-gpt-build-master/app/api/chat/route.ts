@@ -3,6 +3,7 @@ import {
   saveChatMessages,
 } from "@/features/ai/actions/chat-store";
 import { getChatModel } from "@/features/ai/utils/model";
+import { consumePrompt, DAILY_PROMPT_LIMIT } from "@/features/ai/utils/rate-limit";
 import { webSearchTool } from "@/features/ai/utils/web-search-tool";
 import { requireUser } from "@/features/auth/action/require-user";
 import { prisma } from "@/lib/db";
@@ -49,6 +50,14 @@ export async function POST(req: Request) {
 
   if (!conversation) {
     return new Response("Conversation not found", { status: 404 });
+  }
+
+  const promptUsage = await consumePrompt(user.id);
+  if (!promptUsage.allowed) {
+    return new Response(
+      `You've reached today's limit of ${DAILY_PROMPT_LIMIT} prompts. Try again tomorrow.`,
+      { status: 429 },
+    );
   }
 
   const previousMessages = await loadChatMessages(id);

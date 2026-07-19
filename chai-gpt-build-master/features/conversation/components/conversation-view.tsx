@@ -4,7 +4,7 @@ import { SidebarTrigger } from "@/components/ui/sidebar";
 import { useQueryClient } from "@tanstack/react-query";
 import { DefaultChatTransport, type UIMessage } from "ai";
 import { useChat } from "@ai-sdk/react";
-import React, { useMemo } from "react";
+import React, { useMemo, useState } from "react";
 import { useConversations } from "../hooks/use-conversation";
 import { useDeleteMessagesFrom } from "@/features/messages/hooks/use-messages";
 import { queryKeys } from "../utils/query-keys";
@@ -16,6 +16,7 @@ import { ChatComposer } from "./chat-composer";
 type ConversationViewProps = {
   conversationId: string;
   initialMessages: UIMessage[];
+  remainingPrompts: number;
 };
 
 /**
@@ -24,9 +25,11 @@ type ConversationViewProps = {
 export const ConversationView = ({
   conversationId,
   initialMessages,
+  remainingPrompts,
 }: ConversationViewProps) => {
   const queryClient = useQueryClient();
   const { data: conversations } = useConversations();
+  const [remaining, setRemaining] = useState(remainingPrompts);
 
   const transport = useMemo(
     () =>
@@ -47,6 +50,7 @@ export const ConversationView = ({
     messages: initialMessages,
     transport,
     onFinish: () => {
+      setRemaining((count) => Math.max(count - 1, 0));
       void queryClient.invalidateQueries({
         queryKey: queryKeys.conversations.all,
       });
@@ -98,6 +102,7 @@ export const ConversationView = ({
         }}
         onStop={() => void stop()}
         isSending={status !== "ready"}
+        remainingPrompts={remaining}
         autoFocus
       />
     </div>

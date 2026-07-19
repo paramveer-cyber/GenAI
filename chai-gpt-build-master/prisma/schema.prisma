@@ -23,6 +23,7 @@ model User {
   updatedAt DateTime @updatedAt
 
   conversations Conversation[]
+  promptUsages  PromptUsage[]
 }
 
 model Conversation {
@@ -83,4 +84,15 @@ model Message {
 
    @@index([conversationId, createdAt(sort: Desc)])
    
+}
+
+model PromptUsage {
+  id     String   @id @default(cuid())
+  userId String
+  date   DateTime
+  count  Int      @default(0)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, date])
 }
