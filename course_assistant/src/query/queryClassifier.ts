@@ -1,4 +1,5 @@
 import { buildQueryLlmClient, getSecondaryModel } from "./queryLlmClient.js";
+import { queryClassifierSystemPrompt } from "./systemPrompts.js";
 import type { QueryClassLabel } from "./types.js";
 
 const validLabels: QueryClassLabel[] = [
@@ -8,19 +9,12 @@ const validLabels: QueryClassLabel[] = [
   "conceptual-broad",
 ];
 
-const classifierSystemPrompt = `Classify the user question into exactly one label: simple-factual, compound, ambiguous, conceptual-broad.
-simple-factual: a single direct factual lookup.
-compound: multiple distinct questions or clauses joined together.
-ambiguous: relies on unclear pronouns or missing context to understand what is being asked.
-conceptual-broad: asks how something builds up, evolves, or wants a wide conceptual overview across the course.
-Respond with only the label, nothing else.`;
-
 export async function classifyQuery(question: string): Promise<QueryClassLabel> {
   const client = buildQueryLlmClient();
   const response = await client.chat.completions.create({
     model: getSecondaryModel(),
     messages: [
-      { role: "system", content: classifierSystemPrompt },
+      { role: "system", content: queryClassifierSystemPrompt },
       { role: "user", content: question },
     ],
   });

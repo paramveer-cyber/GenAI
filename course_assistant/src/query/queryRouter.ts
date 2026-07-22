@@ -1,5 +1,5 @@
 import { buildQueryLlmClient, getSecondaryModel } from "./queryLlmClient.js";
-import { COURSE_DB_SCHEMA_DESCRIPTION } from "./courseDbSchemaDescription.js";
+import { queryRouterSystemPrompt } from "./systemPrompts.js";
 import type { QueryVariant, RoutedVariant, QuerySource } from "./types.js";
 
 const sqlSignalPattern =
@@ -21,16 +21,7 @@ async function routeWithLlm(variants: QueryVariant[]): Promise<RoutedVariant[]> 
     model: getSecondaryModel(),
     response_format: { type: "json_object" },
     messages: [
-      {
-        role: "system",
-        content: `Decide, for each numbered question, which data source answers it best.
-Sources:
-vector: course video subtitle content, for conceptual/explanatory questions (what is, how does, why, explain).
-sql: structured course database, for lookups/aggregations over course structure.
-${COURSE_DB_SCHEMA_DESCRIPTION}
-both: question needs conceptual explanation plus a structural fact.
-Respond with only JSON in the shape {"routes": [{"index": 0, "source": "vector", "rationale": "..."}]}.`,
-      },
+      { role: "system", content: queryRouterSystemPrompt },
       {
         role: "user",
         content: variants.map((variant, index) => `${index}: ${variant.text}`).join("\n"),

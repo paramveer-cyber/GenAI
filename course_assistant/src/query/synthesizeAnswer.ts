@@ -1,4 +1,5 @@
 import { buildQueryLlmClient, getPrimaryModel } from "./queryLlmClient.js";
+import { synthesisSystemPromptHeader } from "./systemPrompts.js";
 import type {
   ConsolidatedCitation,
   SynthesisCitation,
@@ -18,19 +19,12 @@ function buildVideoContextBlock(citation: ConsolidatedCitation): string {
     videoId: citation.videoId,
     videoTitle: citation.videoTitle,
     moduleName: citation.moduleName,
+    startMs: citation.startMs,
+    endMs: citation.endMs,
     timestampRange: `${formatTimestamp(citation.startMs)}-${formatTimestamp(citation.endMs)}`,
     content: citation.content,
   });
 }
-
-const synthesisSystemPromptHeader = `You are an expert in answering user questions based on the provided course context.
-Answer only using the provided context, never from general knowledge.
-Respond with only JSON in this exact shape:
-{"answerMarkdown": "...", "citations": [{"videoId": "...", "videoTitle": "...", "startMs": 0, "endMs": 0, "quotedSnippet": "..."}]}
-answerMarkdown must include an inline citation marker after every claim: [Video: "<videoTitle>", <mm:ss>-<mm:ss>] for video subtitle context, or [course metadata] for course metadata context.
-If the question has multiple parts, answer each part separately with its own citation, then combine them into one coherent answerMarkdown.
-citations must contain one entry per distinct video segment actually cited in answerMarkdown, quotedSnippet being the exact supporting text from that segment.
-If the context does not cover the question, say so in answerMarkdown and return an empty citations array.`;
 
 function isSynthesisCitation(
   candidate: unknown,

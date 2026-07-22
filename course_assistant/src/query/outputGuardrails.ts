@@ -1,4 +1,5 @@
 import { buildQueryLlmClient, getSecondaryModel } from "./queryLlmClient.js";
+import { scopeCheckSystemPrompt } from "./systemPrompts.js";
 import type {
   ConsolidatedCitation,
   SynthesizedAnswer,
@@ -77,9 +78,6 @@ async function checkModerationPolicy(
   return `moderation flagged categories: ${flaggedCategories}`;
 }
 
-const scopeCheckSystemPrompt = `Check whether an answer stays strictly within the provided course context, with no general-knowledge filler the context does not support.
-Respond with only JSON in the shape {"stayedInScope": true} or {"stayedInScope": false, "reason": "..."}.`;
-
 interface ScopeCheckResult {
   stayedInScope: boolean;
   reason: string;
@@ -104,10 +102,12 @@ async function checkAnswerStaysInScope(
   userQuery: string,
   synthesizedAnswer: SynthesizedAnswer,
   videoCitations: ConsolidatedCitation[],
+  sqlFactBlocks: string[],
 ): Promise<string | null> {
-  const contextBlock = videoCitations
+  const videoContextBlock = videoCitations
     .map((citation) => `[${citation.videoTitle}]: ${citation.content}`)
     .join("\n\n");
+  const contextBlock = [videoContextBlock, ...sqlFactBlocks].join("\n\n");
   const client = buildQueryLlmClient();
   const response = await client.chat.completions.create({
     model: getSecondaryModel(),
@@ -130,6 +130,7 @@ export async function applyOutputGuardrails(
   userQuery: string,
   synthesizedAnswer: SynthesizedAnswer,
   videoCitations: ConsolidatedCitation[],
+  sqlFactBlocks: string[] = [],
 ): Promise<SynthesizedAnswer> {
   const citationFailureReason = verifyCitations(
     synthesizedAnswer,
@@ -162,6 +163,7 @@ export async function applyOutputGuardrails(
     userQuery,
     synthesizedAnswer,
     videoCitations,
+    sqlFactBlocks,
   );
   if (scopeFailureReason) {
     logGuardrailFailure("scope_check", userQuery, scopeFailureReason);

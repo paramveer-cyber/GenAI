@@ -54,7 +54,7 @@ export async function queryCourse(
       [],
       nonEmptySqlFactBlocks,
     );
-    return applyOutputGuardrails(userQuery, sqlOnlyAnswer, []);
+    return applyOutputGuardrails(userQuery, sqlOnlyAnswer, [], nonEmptySqlFactBlocks);
   }
 
   return runCorrectiveRetrievalLoop(

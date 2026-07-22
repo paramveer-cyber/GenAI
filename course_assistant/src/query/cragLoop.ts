@@ -59,11 +59,12 @@ interface RetryPlan {
 async function planRetryOrAbstain(
   attempt: number,
   userQuery: string,
-  currentVariant: QueryVariant,
+  vectorVariants: QueryVariant[],
   score: number,
   reasonCode: CragReasonCode,
 ): Promise<RetryPlan | null> {
   if (attempt === MAX_RETRIES) return null;
+  const [currentVariant, ...remainingVariants] = vectorVariants;
   logRetryAttempt(attempt, currentVariant, score, reasonCode);
   const refinedVariant = await refineVariantForRetry(
     userQuery,
@@ -71,7 +72,7 @@ async function planRetryOrAbstain(
     reasonCode,
   );
   return {
-    vectorVariants: [refinedVariant],
+    vectorVariants: [refinedVariant, ...remainingVariants],
     rerankScoreFloor:
       reasonCode === "citation_mismatch" ? STRICT_RERANK_SCORE_FLOOR : 0,
   };
@@ -88,11 +89,6 @@ export async function runCorrectiveRetrievalLoop(
   let rerankScoreFloor = 0;
 
   for (let attempt = 0; attempt <= MAX_RETRIES; attempt += 1) {
-    const currentVariant: QueryVariant = vectorVariants[0] ?? {
-      text: userQuery,
-      kind: "original",
-    };
-
     const candidateChunks = await retrieveForVariants(
       vectorVariants,
       vectorStore,
@@ -112,7 +108,7 @@ export async function runCorrectiveRetrievalLoop(
       const retryPlan = await planRetryOrAbstain(
         attempt,
         userQuery,
-        currentVariant,
+        vectorVariants,
         0,
         "no_relevant_content",
       );
@@ -127,7 +123,7 @@ export async function runCorrectiveRetrievalLoop(
       const retryPlan = await planRetryOrAbstain(
         attempt,
         userQuery,
-        currentVariant,
+        vectorVariants,
         chunkGrade.score,
         chunkGrade.reasonCode,
       );
@@ -148,19 +144,21 @@ export async function runCorrectiveRetrievalLoop(
       userQuery,
       synthesizedAnswer,
       rerankedChunks,
+      sqlFactBlocks,
     );
     if (answerGrade.score >= PASSING_SCORE) {
       return applyOutputGuardrails(
         userQuery,
         synthesizedAnswer,
         videoCitations,
+        sqlFactBlocks,
       );
     }
 
     const retryPlan = await planRetryOrAbstain(
       attempt,
       userQuery,
-      currentVariant,
+      vectorVariants,
       answerGrade.score,
       answerGrade.reasonCode,
     );

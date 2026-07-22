@@ -1,4 +1,5 @@
 import { buildQueryLlmClient, getSecondaryModel } from "./queryLlmClient.js";
+import { rerankChunksSystemPrompt } from "./systemPrompts.js";
 import type { RetrievedCandidateChunk, RerankedChunk } from "./types.js";
 
 const TOP_K_AFTER_RERANK = 8;
@@ -24,11 +25,7 @@ async function requestRelevanceScores(
     model: getSecondaryModel(),
     response_format: { type: "json_object" },
     messages: [
-      {
-        role: "system",
-        content: `Score how relevant each numbered course transcript chunk is to answering the user question, on a 0-10 scale, 10 being directly and fully relevant.
-Respond with only JSON in the shape {"rankings": [{"index": 0, "score": 7}]}, one entry per chunk.`,
-      },
+      { role: "system", content: rerankChunksSystemPrompt },
       {
         role: "user",
         content: `Question: ${originalQuery}\n\nChunks:\n${candidates

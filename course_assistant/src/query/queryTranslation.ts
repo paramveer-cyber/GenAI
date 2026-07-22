@@ -1,4 +1,10 @@
 import { buildQueryLlmClient, getSecondaryModel } from "./queryLlmClient.js";
+import {
+  rewriteQuerySystemPrompt,
+  stepBackQuerySystemPrompt,
+  hydeDocumentSystemPrompt,
+  decomposeSubQuestionsSystemPrompt,
+} from "./systemPrompts.js";
 
 async function askLlmForText(systemPrompt: string, userText: string): Promise<string> {
   const client = buildQueryLlmClient();
@@ -13,24 +19,15 @@ async function askLlmForText(systemPrompt: string, userText: string): Promise<st
 }
 
 export function rewriteQuery(question: string): Promise<string> {
-  return askLlmForText(
-    "Rewrite the user question to be clear and self-contained, resolving ambiguous pronouns or shorthand. Respond with only the rewritten question, nothing else.",
-    question
-  );
+  return askLlmForText(rewriteQuerySystemPrompt, question);
 }
 
 export function stepBackQuery(question: string): Promise<string> {
-  return askLlmForText(
-    "Generate a more general, conceptual version of the user question that asks about the underlying mechanism or principle rather than the specific detail. Respond with only the generalized question, nothing else.",
-    question
-  );
+  return askLlmForText(stepBackQuerySystemPrompt, question);
 }
 
 export function generateHydeDocument(question: string): Promise<string> {
-  return askLlmForText(
-    "Write a short hypothetical passage, in the style of a course video transcript, that would directly answer the user question. A few sentences, confident explanatory tone. Respond with only the passage, nothing else.",
-    question
-  );
+  return askLlmForText(hydeDocumentSystemPrompt, question);
 }
 
 export async function decomposeIntoSubQuestions(question: string): Promise<string[]> {
@@ -39,11 +36,7 @@ export async function decomposeIntoSubQuestions(question: string): Promise<strin
     model: getSecondaryModel(),
     response_format: { type: "json_object" },
     messages: [
-      {
-        role: "system",
-        content:
-          'Split the user question into independent sub-questions, one per distinct clause or topic. Respond with only JSON in the shape {"subQuestions": ["...", "..."]}.',
-      },
+      { role: "system", content: decomposeSubQuestionsSystemPrompt },
       { role: "user", content: question },
     ],
   });
